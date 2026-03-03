@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="manifest" href="manifest.json">
+  <title>CampusTask</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background: white;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React & ReactDOM from CDN -->
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel Standalone for JSX -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    // ─── LINEART SVG ICONS ───
+    const CatIcons = {
+      laundry: (sz = 24, c = "#1f2937") => (
+        <svg width={sz} height={sz} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="4" y="2" width="24" height="28" rx="3" />
+          <circle cx="16" cy="18" r="7" />
+          <path d="M13 16.5c1-1.5 3.5-1.5 5 0s1.5 3.5 0 5" />
+          <circle cx="8" cy="6" r="1" fill={c} stroke="none" />
+          <circle cx="12" cy="6" r="1" fill={c} stroke="none" />
+        </svg>
+      ),
+      food: (sz = 24, c = "#1f2937") => (
+        <svg width={sz} height={sz} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 16h24" />
+          <path d="M6 16c0-6 4-10 10-10s10 4 10 10" />
+          <path d="M4 16c0 2 1 4 3 4h18c2 0 3-2 3-4" />
+          <line x1="6" y1="24" x2="26" y2="24" />
+          <line x1="10" y1="20" x2="10" y2="24" />
+          <line x1="22" y1="20" x2="22" y2="24" />
+        </svg>
+      ),
+      moving: (sz = 24, c = "#1f2937") => (
+        <svg width={sz} height={sz} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 6c-3 0-5.5 2-5.5 4.5S13 14 13 17h6c0-3 2.5-4.5 2.5-6.5S19 6 16 6z" />
+          <line x1="16" y1="17" x2="16" y2="22" />
+          <line x1="10" y1="22" x2="22" y2="22" />
+          <path d="M10 22c-1 2-2 4-2 6h16c0-2-1-4-2-6" />
+          <line x1="12" y1="11" x2="8" y2="8" />
+          <line x1="20" y1="11" x2="24" y2="8" />
+        </svg>
+      ),
+      shopping: (sz = 24, c = "#1f2937") => (
+        <svg width={sz} height={sz} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 8h3l3 14h12l3-10H10" />
+          <circle cx="13" cy="26" r="2" />
+          <circle cx="23" cy="26" r="2" />
+        </svg>
+      ),
+      errands: (sz = 24, c = "#1f2937") => (
+        <svg width={sz} height={sz} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="5" y="4" width="22" height="24" rx="2" />
+          <line x1="10" y1="10" x2="13" y2="10" />
+          <line x1="16" y1="10" x2="22" y2="10" />
+          <line x1="10" y1="15" x2="13" y2="15" />
+          <line x1="16" y1="15" x2="22" y2="15" />
+          <line x1="10" y1="20" x2="13" y2="20" />
+          <line x1="16" y1="20" x2="22" y2="20" />
+        </svg>
+      ),
+      tutoring: (sz = 24, c = "#1f2937") => (
+        <svg width={sz} height={sz} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 12l12-6 12 6-12 6-12-6z" />
+          <path d="M8 14v6c0 2 3.5 4 8 4s8-2 8-4v-6" />
+          <line x1="28" y1="12" x2="28" y2="22" />
+        </svg>
+      ),
+      other: (sz = 24, c = "#1f2937") => (
+        <svg width={sz} height={sz} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="16" cy="16" r="12" />
+          <line x1="16" y1="10" x2="16" y2="16" />
+          <line x1="16" y1="16" x2="20" y2="20" />
+        </svg>
+      ),
+    };
+
+    const NavIcons = {
+      home: (a) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={a?"#2563eb":"#bbb"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      search: (a) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={a?"#2563eb":"#bbb"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+      plus: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+      chat: (a) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={a?"#2563eb":"#bbb"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+      user: (a) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={a?"#2563eb":"#bbb"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+      back: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1f2937" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
+      send: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>,
+      chevron: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ddd" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>,
+      pin: () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+      verified: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="#2563eb" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10" fill="none" stroke="white" strokeWidth="2.5"/></svg>,
+      shield: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+      star: (f) => <svg width="11" height="11" viewBox="0 0 24 24" fill={f?"#f59e0b":"none"} stroke="#f59e0b" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    };
+
+    // ─── DATA ───
+    const USERS = {
+      me: { id: "me", name: "You", avatar: "🧑‍🎓", rating: 0, reviews: 0, verified: true, joined: "Just now", tasksCompleted: 0, bio: "New to CampusTask!" },
+      ally: { id: "ally", name: "Ally M.", avatar: "👩‍💻", rating: 4.9, reviews: 47, verified: true, joined: "Aug 2025", tasksCompleted: 52, bio: "Senior, Business major. Fast & reliable!" },
+      jordan: { id: "jordan", name: "Jordan K.", avatar: "🏀", rating: 4.7, reviews: 31, verified: true, joined: "Sep 2025", tasksCompleted: 34, bio: "Sophomore, always on campus." },
+      sam: { id: "sam", name: "Sam R.", avatar: "📚", rating: 4.5, reviews: 18, verified: false, joined: "Jan 2026", tasksCompleted: 20, bio: "Freshman, earning extra cash." },
+      maya: { id: "maya", name: "Maya L.", avatar: "🎨", rating: 5.0, reviews: 12, verified: true, joined: "Oct 2025", tasksCompleted: 13, bio: "Junior, Art major. Detail-oriented!" },
+      chris: { id: "chris", name: "Chris T.", avatar: "🎵", rating: 4.3, reviews: 8, verified: true, joined: "Nov 2025", tasksCompleted: 9, bio: "Music major, always happy to help." },
+    };
+
+    const INITIAL_TASKS = [
+      { id: 1, title: "Laundry pickup & fold", desc: "Pick up bag from Miller Hall 204, wash/dry/fold, return by 8pm.", category: "Laundry", price: 25, postedBy: "ally", claimedBy: null, status: "open", location: "Miller Hall", time: "2h ago", reviews: [] },
+      { id: 2, title: "Dining hall lunch run", desc: "Chicken wrap + fruit cup from West Dining. Stuck in lab until 2pm.", category: "Food", price: 8, postedBy: "jordan", claimedBy: null, status: "open", location: "West Dining", time: "35m ago", reviews: [] },
+      { id: 3, title: "Help move mini-fridge", desc: "Carry a mini-fridge from parking lot to 3rd floor of Adams. 15 min.", category: "Moving", price: 15, postedBy: "sam", claimedBy: null, status: "open", location: "Adams Dorm", time: "1h ago", reviews: [] },
+      { id: 4, title: "Print & bind class notes", desc: "Print 40 pages and spiral bind at the library.", category: "Errands", price: 12, postedBy: "maya", claimedBy: null, status: "open", location: "Main Library", time: "3h ago", reviews: [] },
+      { id: 5, title: "Grocery run to Target", desc: "Need someone with a car for ~10 items. Will tip extra!", category: "Shopping", price: 20, postedBy: "chris", claimedBy: null, status: "open", location: "Off Campus", time: "45m ago", reviews: [] },
+    ];
+
+    const INITIAL_CONVERSATIONS = {
+      ally: { userId: "ally", taskRef: "Laundry pickup & fold", messages: [
+        { from: "ally", text: "Hey! Bag is outside room 204.", time: "1:42 PM", read: true },
+        { from: "me", text: "Grabbing it in 20 min. Special instructions?", time: "1:45 PM", read: true },
+        { from: "ally", text: "Regular wash & fold, warm water!", time: "1:47 PM", read: false },
+        { from: "ally", text: "Blue bag, right by the door 👍", time: "1:48 PM", read: false },
+      ]},
+      jordan: { userId: "jordan", taskRef: "Dining hall lunch run", messages: [
+        { from: "jordan", text: "Are you near West Dining? Need that wrap before 2 😅", time: "12:30 PM", read: false },
+      ]},
+    };
+
+    const CAT_KEYS = ["Laundry", "Food", "Moving", "Shopping", "Errands", "Tutoring"];
+    const CAT_ICON_MAP = { Laundry: "laundry", Food: "food", Moving: "moving", Shopping: "shopping", Errands: "errands", Tutoring: "tutoring", Other: "other" };
+    const CAT_LABELS = { Laundry: "Laundry", Food: "Food Run", Moving: "Moving", Shopping: "Shopping", Errands: "Errands", Tutoring: "Tutoring", Other: "Other" };
+
+    // Shared styles
+    const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    const BLUE = "#2563eb";
+
+    function Stars({ rating, count }) {
+      return (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
+          {[1,2,3,4,5].map(i => <span key={i}>{NavIcons.star(i <= Math.round(rating))}</span>)}
+          {count !== undefined && <span style={{ fontSize: 11, color: "#bbb", marginLeft: 3 }}>({count})</span>}
+        </span>
+      );
+    }
+
+    // ═══════════════════════════════════
+    // LOGIN
+    // ═══════════════════════════════════
+    function LoginScreen({ onLogin }) {
+      const [screen, setScreen] = useState("splash");
+      const [email, setEmail] = useState("");
+      const [pw, setPw] = useState("");
+      const [name, setName] = useState("");
+      const [school, setSchool] = useState("");
+
+      const inp = { width: "100%", padding: "14px 16px", borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 15, boxSizing: "border-box", outline: "none", background: "#fafafa", fontFamily: FONT };
+
+      if (screen === "splash") {
+        return (
+          <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "white", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, fontFamily: FONT, textAlign: "center" }}>
+            <h1 style={{ fontSize: 42, fontWeight: 800, margin: "0 0 6px", color: BLUE, letterSpacing: "-1.5px" }}>CampusTask</h1>
+            <p style={{ fontSize: 15, color: "#999", margin: "0 0 56px" }}>Get stuff done. Get paid.</p>
+            <button onClick={() => setScreen("signup")} style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: "#1f2937", color: "white", fontWeight: 700, fontSize: 16, cursor: "pointer", marginBottom: 12, fontFamily: FONT }}>Get Started</button>
+            <button onClick={() => setScreen("login")} style={{ width: "100%", padding: 16, borderRadius: 14, border: "1.5px solid #e5e7eb", background: "white", color: "#1f2937", fontWeight: 600, fontSize: 16, cursor: "pointer", fontFamily: FONT }}>I have an account</button>
+            <div style={{ marginTop: 56, display: "flex", gap: 20, fontSize: 11, color: "#bbb" }}>
+              <span>Escrow payments</span><span>·</span><span>Trust scores</span><span>·</span><span>Verified students</span>
+            </div>
+          </div>
+        );
+      }
+      if (screen === "login") {
+        return (
+          <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "white", fontFamily: FONT, padding: "0 24px" }}>
+            <div style={{ paddingTop: 60 }}><button onClick={() => setScreen("splash")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>{NavIcons.back()}</button></div>
+            <h2 style={{ fontSize: 28, fontWeight: 800, margin: "24px 0 4px", color: "#1f2937" }}>Welcome back</h2>
+            <p style={{ fontSize: 14, color: "#999", margin: "0 0 32px" }}>Sign in to your account</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <input style={inp} placeholder="School email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+              <input style={inp} placeholder="Password" type="password" value={pw} onChange={e => setPw(e.target.value)} />
+              <button onClick={onLogin} style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: BLUE, color: "white", fontWeight: 700, fontSize: 16, cursor: "pointer", marginTop: 8, fontFamily: FONT }}>Sign In</button>
+              <p style={{ textAlign: "center", fontSize: 13, color: "#999" }}>No account? <span onClick={() => setScreen("signup")} style={{ color: BLUE, fontWeight: 600, cursor: "pointer" }}>Sign Up</span></p>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "white", fontFamily: FONT, padding: "0 24px" }}>
+          <div style={{ paddingTop: 60 }}><button onClick={() => setScreen("splash")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>{NavIcons.back()}</button></div>
+          <h2 style={{ fontSize: 28, fontWeight: 800, margin: "24px 0 4px" }}>Create account</h2>
+          <p style={{ fontSize: 14, color: "#999", margin: "0 0 32px" }}>Use your .edu email to get verified</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <input style={inp} placeholder="Full name" value={name} onChange={e => setName(e.target.value)} />
+            <input style={inp} placeholder="School email (.edu)" value={email} onChange={e => setEmail(e.target.value)} />
+            <input style={inp} placeholder="Your school" value={school} onChange={e => setSchool(e.target.value)} />
+            <input style={inp} placeholder="Create password" type="password" value={pw} onChange={e => setPw(e.target.value)} />
+            <button onClick={onLogin} style={{ width: "100%", padding: 16, borderRadius: 14, border: "none", background: BLUE, color: "white", fontWeight: 700, fontSize: 16, cursor: "pointer", marginTop: 8, fontFamily: FONT }}>Create Account</button>
+            <p style={{ textAlign: "center", fontSize: 13, color: "#999" }}>Have an account? <span onClick={() => setScreen("login")} style={{ color: BLUE, fontWeight: 600, cursor: "pointer" }}>Sign In</span></p>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════
+    // CATEGORY ROW (Mockup A style)
+    // ═══════════════════════════════════
+    function CategoryRow({ catKey, count, active, onClick }) {
+      const iconKey = CAT_ICON_MAP[catKey] || "other";
+      const label = CAT_LABELS[catKey] || catKey;
+      const Icon = CatIcons[iconKey];
+      return (
+        <div onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 0", borderBottom: "1px solid #f5f5f5", cursor: "pointer", background: active ? "#f8faff" : "transparent", transition: "background 0.15s" }}>
+          <div style={{ width: 42, height: 42, borderRadius: 12, border: active ? `1.5px solid ${BLUE}` : "1.5px solid #e5e5e5", display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.15s" }}>
+            {Icon(22, active ? BLUE : "#1f2937")}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, fontSize: 15, color: active ? BLUE : "#1f2937" }}>{label}</div>
+            <div style={{ fontSize: 12, color: "#bbb", marginTop: 1 }}>{count} available</div>
+          </div>
+          {NavIcons.chevron()}
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════
+    // TASK CARD (clean, minimal)
+    // ═══════════════════════════════════
+    function TaskCard({ task, users, onClaim, onComplete, onReview, onProfile, onMessage }) {
+      const poster = users[task.postedBy];
+      const claimer = task.claimedBy ? users[task.claimedBy] : null;
+      const iconKey = CAT_ICON_MAP[task.category] || "other";
+      const Icon = CatIcons[iconKey];
+
+      return (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 0", borderBottom: "1px solid #f5f5f5" }}>
+          {/* Icon */}
+          <div style={{ width: 38, height: 38, borderRadius: 10, border: "1.5px solid #eee", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+            {Icon(20, "#999")}
+          </div>
+          {/* Content */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{task.title}</div>
+              <div style={{ fontWeight: 800, fontSize: 17, color: "#1f2937", flexShrink: 0, marginLeft: 8 }}>${task.price}</div>
+            </div>
+            <div style={{ fontSize: 12, color: "#999", marginTop: 2, lineHeight: 1.4 }}>{task.desc}</div>
+            {/* Meta row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }} onClick={() => onProfile(poster)}>
+                <span style={{ fontSize: 12 }}>{poster.avatar}</span>
+                <span style={{ fontSize: 12, color: "#666" }}>{poster.name}</span>
+                {poster.verified && NavIcons.verified()}
+              </div>
+              <span style={{ color: "#e5e5e5" }}>·</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#bbb" }}>
+                {NavIcons.pin()} {task.location}
+              </div>
+              <span style={{ color: "#e5e5e5" }}>·</span>
+              <span style={{ fontSize: 11, color: "#bbb" }}>{task.time}</span>
+            </div>
+            {/* Status / Actions */}
+            {task.status === "open" && task.postedBy !== "me" && (
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <button onClick={() => onClaim(task.id)} style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: "#1f2937", color: "white", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: FONT }}>Claim · ${(task.price * 0.8).toFixed(0)}</button>
+                <button onClick={() => onMessage(task.postedBy)} style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px solid #eee", background: "white", cursor: "pointer", display: "flex", alignItems: "center" }}>{NavIcons.chat(false)}</button>
+              </div>
+            )}
+            {task.status === "claimed" && task.claimedBy === "me" && (
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <button onClick={() => onComplete(task.id)} style={{ padding: "7px 16px", borderRadius: 8, border: "none", background: "#16a34a", color: "white", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: FONT }}>Mark Complete</button>
+                <button onClick={() => onMessage(task.postedBy)} style={{ padding: "7px 12px", borderRadius: 8, border: "1.5px solid #eee", background: "white", cursor: "pointer", display: "flex", alignItems: "center" }}>{NavIcons.chat(false)}</button>
+              </div>
+            )}
+            {task.status === "claimed" && task.postedBy === "me" && claimer && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                <span style={{ fontSize: 12, color: BLUE }}>{claimer.name} is on it</span>
+                <button onClick={() => onMessage(task.claimedBy)} style={{ padding: "5px 10px", borderRadius: 6, border: "1.5px solid #eee", background: "white", cursor: "pointer", fontSize: 11 }}>Message</button>
+              </div>
+            )}
+            {task.status === "completed" && task.postedBy === "me" && task.reviews.length === 0 && (
+              <button onClick={() => onReview(task.id)} style={{ marginTop: 10, padding: "7px 16px", borderRadius: 8, border: "none", background: "#1f2937", color: "white", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: FONT }}>Leave a Review</button>
+            )}
+            {task.reviews.length > 0 && (
+              <div style={{ marginTop: 8, fontSize: 12, color: "#999" }}>
+                {task.reviews.map((r, i) => <div key={i}><Stars rating={r.rating} /> "{r.text}"</div>)}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════
+    // MODALS (bottom sheets, clean)
+    // ═══════════════════════════════════
+    function Overlay({ children, onClose }) {
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center", backdropFilter: "blur(2px)" }} onClick={onClose}>
+          <div style={{ background: "white", borderRadius: "20px 20px 0 0", padding: "20px 24px 32px", width: "100%", maxWidth: 430, maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: "#e5e5e5", margin: "0 auto 16px" }} />
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    function ProfileCard({ user, onClose, onMessage }) {
+      return (
+        <Overlay onClose={onClose}>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>{user.avatar}</div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ fontWeight: 700, fontSize: 18 }}>{user.name}</span>
+                {user.verified && NavIcons.verified()}
+              </div>
+              <div style={{ fontSize: 12, color: "#999", marginTop: 2 }}>Joined {user.joined} · {user.tasksCompleted} tasks</div>
+              {user.reviews > 0 && <div style={{ marginTop: 3 }}><Stars rating={user.rating} count={user.reviews} /></div>}
+            </div>
+          </div>
+          <p style={{ fontSize: 13, color: "#666", margin: "14px 0 0", lineHeight: 1.5 }}>{user.bio}</p>
+          <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+            {user.id !== "me" && <button onClick={() => { onClose(); onMessage(user.id); }} style={{ flex: 1, padding: 14, borderRadius: 12, border: "none", background: "#1f2937", color: "white", fontWeight: 600, cursor: "pointer", fontFamily: FONT }}>Message</button>}
+            <button onClick={onClose} style={{ flex: 1, padding: 14, borderRadius: 12, border: "none", background: "#f5f5f5", fontWeight: 600, cursor: "pointer", color: "#666", fontFamily: FONT }}>Close</button>
+          </div>
+        </Overlay>
+      );
+    }
+
+    function PostTaskForm({ onPost, onCancel }) {
+      const [title, setTitle] = useState("");
+      const [desc, setDesc] = useState("");
+      const [price, setPrice] = useState("");
+      const [category, setCategory] = useState("Errands");
+      const [location, setLocation] = useState("");
+      const handleSubmit = () => { if (title && desc && price && location) onPost({ title, desc, price: parseFloat(price), category, location }); };
+      const inp = { width: "100%", padding: "12px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, boxSizing: "border-box", outline: "none", background: "#fafafa", fontFamily: FONT };
+
+      return (
+        <Overlay onClose={onCancel}>
+          <h3 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 700 }}>New Task</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <input style={inp} placeholder="What do you need done?" value={title} onChange={e => setTitle(e.target.value)} />
+            <textarea style={{ ...inp, minHeight: 60, resize: "none" }} placeholder="Add details..." value={desc} onChange={e => setDesc(e.target.value)} />
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {CAT_KEYS.map(c => {
+                const iconKey = CAT_ICON_MAP[c];
+                const active = category === c;
+                return (
+                  <button key={c} onClick={() => setCategory(c)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 8, border: active ? `1.5px solid #1f2937` : "1.5px solid #eee", background: active ? "#1f2937" : "white", color: active ? "white" : "#999", fontSize: 11, fontWeight: 500, cursor: "pointer", fontFamily: FONT }}>
+                    {CatIcons[iconKey](14, active ? "white" : "#999")} {CAT_LABELS[c]}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <input type="number" style={{ ...inp, flex: 1 }} placeholder="Price ($)" value={price} onChange={e => setPrice(e.target.value)} />
+              <input style={{ ...inp, flex: 1 }} placeholder="Location" value={location} onChange={e => setLocation(e.target.value)} />
+            </div>
+            {price && parseFloat(price) > 0 && <div style={{ fontSize: 12, color: "#999", textAlign: "center" }}>Tasker earns <strong style={{ color: "#1f2937" }}>${(parseFloat(price) * 0.8).toFixed(2)}</strong> · Fee ${(parseFloat(price) * 0.2).toFixed(2)}</div>}
+            <button onClick={handleSubmit} style={{ padding: 14, borderRadius: 12, border: "none", background: title && desc && price && location ? "#1f2937" : "#eee", color: title && desc && price && location ? "white" : "#bbb", fontWeight: 700, cursor: "pointer", fontSize: 15, fontFamily: FONT }}>Post Task</button>
+          </div>
+        </Overlay>
+      );
+    }
+
+    function ReviewModal({ task, users, onSubmit, onCancel }) {
+      const [rating, setRating] = useState(5);
+      const [text, setText] = useState("");
+      const tasker = users[task.claimedBy];
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(2px)" }} onClick={onCancel}>
+          <div style={{ background: "white", borderRadius: 18, padding: 24, width: "88%", maxWidth: 360 }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: 0, fontSize: 18, textAlign: "center" }}>Review {tasker?.name}</h3>
+            <p style={{ fontSize: 12, color: "#999", textAlign: "center", margin: "4px 0 16px" }}>{task.title}</p>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              {[1,2,3,4,5].map(i => <span key={i} onClick={() => setRating(i)} style={{ fontSize: 34, cursor: "pointer", color: i <= rating ? "#f59e0b" : "#eee" }}>★</span>)}
+            </div>
+            <textarea style={{ width: "100%", padding: 12, borderRadius: 10, border: "1px solid #eee", fontSize: 14, minHeight: 50, resize: "none", boxSizing: "border-box", fontFamily: FONT, background: "#fafafa" }} placeholder="How did it go?" value={text} onChange={e => setText(e.target.value)} />
+            <button onClick={() => onSubmit(rating, text)} style={{ marginTop: 14, width: "100%", padding: 14, borderRadius: 12, border: "none", background: "#1f2937", color: "white", fontWeight: 700, cursor: "pointer", fontFamily: FONT }}>Submit Review</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════
+    // MESSAGES
+    // ═══════════════════════════════════
+    function ConversationList({ conversations, users, onOpenChat }) {
+      const list = Object.values(conversations).sort((a, b) => (b.messages[b.messages.length-1]?.time || "").localeCompare(a.messages[a.messages.length-1]?.time || ""));
+      if (!list.length) return <div style={{ textAlign: "center", padding: "60px 20px", color: "#bbb" }}><p style={{ fontSize: 15, fontWeight: 500, color: "#999" }}>No messages yet</p><p style={{ fontSize: 13 }}>Start a conversation from any task</p></div>;
+      return (
+        <div>
+          {list.map(c => {
+            const u = users[c.userId];
+            const last = c.messages[c.messages.length - 1];
+            const unread = c.messages.filter(m => m.from !== "me" && !m.read).length;
+            return (
+              <div key={c.userId} onClick={() => onOpenChat(c.userId)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", cursor: "pointer", borderBottom: "1px solid #f5f5f5" }}>
+                <div style={{ position: "relative" }}>
+                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{u.avatar}</div>
+                  {unread > 0 && <div style={{ position: "absolute", top: -1, right: -1, width: 15, height: 15, borderRadius: "50%", background: BLUE, color: "white", fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{unread}</div>}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontWeight: unread ? 700 : 500, fontSize: 14 }}>{u.name}</span>
+                    <span style={{ fontSize: 11, color: "#ccc" }}>{last?.time}</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: unread ? "#1f2937" : "#bbb", fontWeight: unread ? 500 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{last?.from === "me" ? "You: " : ""}{last?.text}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function ChatView({ userId, conversations, users, onBack, onSend }) {
+      const [input, setInput] = useState("");
+      const endRef = useRef(null);
+      const u = users[userId];
+      const conv = conversations[userId];
+      const msgs = conv?.messages || [];
+      useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length]);
+      const send = () => { if (input.trim()) { onSend(userId, input.trim()); setInput(""); } };
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#fafafa" }}>
+          <div style={{ background: "white", padding: "12px 16px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", gap: 10 }}>
+            <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>{NavIcons.back()}</button>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>{u.avatar}</div>
+            <div><div style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ fontWeight: 600, fontSize: 14 }}>{u.name}</span>{u.verified && NavIcons.verified()}</div>{conv?.taskRef && <div style={{ fontSize: 11, color: "#bbb" }}>{conv.taskRef}</div>}</div>
+          </div>
+          <div style={{ textAlign: "center", padding: "8px 0 0" }}><span style={{ fontSize: 10, color: "#ccc" }}>{NavIcons.shield()} Messages logged for your protection</span></div>
+          <div style={{ flex: 1, overflow: "auto", padding: "8px 16px", display: "flex", flexDirection: "column", gap: 4 }}>
+            {msgs.map((m, i) => {
+              const me = m.from === "me";
+              return (
+                <div key={i} style={{ display: "flex", justifyContent: me ? "flex-end" : "flex-start" }}>
+                  <div style={{ maxWidth: "75%", padding: "10px 14px", fontSize: 14, lineHeight: 1.4, borderRadius: me ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: me ? "#1f2937" : "white", color: me ? "white" : "#1f2937", boxShadow: me ? "none" : "0 1px 2px rgba(0,0,0,0.04)" }}>
+                    {m.text}
+                    <div style={{ fontSize: 10, marginTop: 3, opacity: 0.4, textAlign: "right" }}>{m.time}</div>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={endRef} />
+          </div>
+          <div style={{ padding: "10px 16px 20px", background: "white", borderTop: "1px solid #f0f0f0", display: "flex", gap: 8 }}>
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} placeholder="Message..." style={{ flex: 1, padding: "10px 16px", borderRadius: 20, border: "1px solid #eee", fontSize: 14, outline: "none", background: "#fafafa", fontFamily: FONT }} />
+            <button onClick={send} style={{ width: 36, height: 36, borderRadius: "50%", border: "none", background: input.trim() ? "#1f2937" : "#eee", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{NavIcons.send()}</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════
+    // PROFILE TAB
+    // ═══════════════════════════════════
+    function ProfileTab({ user, earnings, count }) {
+      return (
+        <div style={{ padding: "32px 24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 28 }}>
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, marginBottom: 10 }}>{user.avatar}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ fontWeight: 700, fontSize: 20 }}>{user.name}</span>{user.verified && NavIcons.verified()}</div>
+            <span style={{ fontSize: 13, color: "#999", marginTop: 2 }}>{user.bio}</span>
+          </div>
+          <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
+            <div style={{ flex: 1, background: "#fafafa", borderRadius: 14, padding: 16, textAlign: "center" }}>
+              <div style={{ fontSize: 24, fontWeight: 800 }}>${earnings.toFixed(2)}</div>
+              <div style={{ fontSize: 11, color: "#bbb", marginTop: 2 }}>Earnings</div>
+            </div>
+            <div style={{ flex: 1, background: "#fafafa", borderRadius: 14, padding: 16, textAlign: "center" }}>
+              <div style={{ fontSize: 24, fontWeight: 800 }}>{count}</div>
+              <div style={{ fontSize: 11, color: "#bbb", marginTop: 2 }}>Tasks</div>
+            </div>
+          </div>
+          {["Edit Profile", "Payment Methods", "Trust & Verification", "Dispute History", "Settings"].map(item => (
+            <div key={item} style={{ display: "flex", alignItems: "center", padding: "15px 0", borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}>
+              <span style={{ fontSize: 14, color: "#1f2937", flex: 1 }}>{item}</span>
+              {NavIcons.chevron()}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════
+    // MAIN APP
+    // ═══════════════════════════════════
+    function CampusTask() {
+      const [loggedIn, setLoggedIn] = useState(false);
+      const [tasks, setTasks] = useState(INITIAL_TASKS);
+      const [tab, setTab] = useState("home");
+      const [filter, setFilter] = useState(null);
+      const [showPost, setShowPost] = useState(false);
+      const [showProfile, setShowProfile] = useState(null);
+      const [reviewingTask, setReviewingTask] = useState(null);
+      const [notification, setNotification] = useState(null);
+      const [earnings, setEarnings] = useState(0);
+      const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
+      const [activeChat, setActiveChat] = useState(null);
+
+      const notify = (msg) => { setNotification(msg); setTimeout(() => setNotification(null), 2500); };
+      const totalUnread = Object.values(conversations).reduce((s, c) => s + c.messages.filter(m => m.from !== "me" && !m.read).length, 0);
+
+      if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
+
+      const handleClaim = (id) => { setTasks(p => p.map(t => t.id === id ? { ...t, status: "claimed", claimedBy: "me" } : t)); notify("Claimed — payment held in escrow"); };
+      const handleComplete = (id) => { const task = tasks.find(t => t.id === id); setTasks(p => p.map(t => t.id === id ? { ...t, status: "completed" } : t)); setEarnings(e => e + task.price * 0.8); notify(`$${(task.price * 0.8).toFixed(2)} released`); };
+      const handleReview = (id) => setReviewingTask(tasks.find(t => t.id === id));
+      const submitReview = (r, t) => { setTasks(p => p.map(x => x.id === reviewingTask.id ? { ...x, status: "reviewed", reviews: [...x.reviews, { rating: r, text: t, by: x.postedBy }] } : x)); setReviewingTask(null); notify("Review submitted"); };
+      const handlePost = (d) => { setTasks(p => [{ id: Date.now(), ...d, postedBy: "me", claimedBy: null, status: "open", time: "Just now", reviews: [] }, ...p]); setShowPost(false); notify("Task posted"); };
+      const openMessage = (uid) => {
+        if (!conversations[uid]) { const rt = tasks.find(t => t.postedBy === uid || t.claimedBy === uid); setConversations(p => ({ ...p, [uid]: { userId: uid, taskRef: rt?.title || null, messages: [] } })); }
+        setConversations(p => ({ ...p, [uid]: p[uid] ? { ...p[uid], messages: p[uid].messages.map(m => ({ ...m, read: true })) } : { userId: uid, taskRef: null, messages: [] } }));
+        setActiveChat(uid); setTab("messages");
+      };
+      const sendMessage = (uid, text) => {
+        const t = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        setConversations(p => ({ ...p, [uid]: { ...p[uid], messages: [...(p[uid]?.messages || []), { from: "me", text, time: t, read: true }] } }));
+        const pool = { ally: ["Got it!", "Sounds good 👍", "Perfect!"], jordan: ["Awesome!", "Thanks 🙏"], sam: ["Cool!", "Works for me"], maya: ["Thank you!", "Amazing"], chris: ["Nice!", "Bet!"] };
+        const rp = pool[uid] || ["Got it!"];
+        setTimeout(() => { const rt = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); setConversations(p => ({ ...p, [uid]: { ...p[uid], messages: [...p[uid].messages, { from: uid, text: rp[Math.floor(Math.random() * rp.length)], time: rt, read: true }] } })); }, 1000 + Math.random() * 1500);
+      };
+
+      const catCounts = {};
+      CAT_KEYS.forEach(k => { catCounts[k] = tasks.filter(t => t.category === k && t.status === "open").length; });
+      const visibleTasks = filter ? tasks.filter(t => t.category === filter) : (tab === "my" ? tasks.filter(t => t.postedBy === "me" || t.claimedBy === "me") : tasks.filter(t => t.status === "open"));
+
+      if (activeChat && tab === "messages") {
+        return <div style={{ maxWidth: 430, margin: "0 auto", fontFamily: FONT }}><ChatView userId={activeChat} conversations={conversations} users={USERS} onBack={() => setActiveChat(null)} onSend={sendMessage} /></div>;
+      }
+
+      return (
+        <div style={{ maxWidth: 430, margin: "0 auto", background: "white", minHeight: "100vh", fontFamily: FONT, paddingBottom: 80 }}>
+          {notification && <div style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)", background: "#1f2937", color: "white", padding: "10px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600, zIndex: 200 }}>{notification}</div>}
+
+          {/* Header */}
+          <div style={{ padding: "18px 20px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: BLUE, letterSpacing: "-0.5px" }}>
+              {tab === "home" || tab === "browse" ? "CampusTask" : tab === "my" ? "My Tasks" : tab === "messages" ? "Messages" : "Profile"}
+            </h1>
+            {(tab === "home" || tab === "browse") && earnings > 0 && (
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#1f2937" }}>${earnings.toFixed(2)}</span>
+            )}
+          </div>
+
+          {/* HOME: Category list + tasks */}
+          {(tab === "home" || tab === "browse") && (
+            <div style={{ padding: "0 20px" }}>
+              {/* Category rows */}
+              {!filter && CAT_KEYS.map(k => (
+                <CategoryRow key={k} catKey={k} count={catCounts[k]} active={false} onClick={() => setFilter(k)} />
+              ))}
+
+              {/* Filtered view: back button + tasks */}
+              {filter && (
+                <>
+                  <button onClick={() => setFilter(null)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: "0 0 10px", fontFamily: FONT, fontSize: 13, color: BLUE, fontWeight: 600 }}>
+                    {NavIcons.back()} All categories
+                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                    {CatIcons[CAT_ICON_MAP[filter]](28, "#1f2937")}
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 18 }}>{CAT_LABELS[filter]}</div>
+                      <div style={{ fontSize: 12, color: "#bbb" }}>{catCounts[filter]} available</div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Nearby section (when no filter) */}
+              {!filter && (
+                <div style={{ marginTop: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#ccc", letterSpacing: 1.2, marginBottom: 8 }}>NEARBY</div>
+                </div>
+              )}
+
+              {/* Task list */}
+              {visibleTasks.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 32, color: "#bbb" }}><p>No tasks</p></div>
+              ) : visibleTasks.map(t => (
+                <TaskCard key={t.id} task={t} users={USERS} onClaim={handleClaim} onComplete={handleComplete} onReview={handleReview} onProfile={u => setShowProfile(u)} onMessage={openMessage} />
+              ))}
+            </div>
+          )}
+
+          {tab === "my" && (
+            <div style={{ padding: "0 20px" }}>
+              {visibleTasks.length === 0 ? <div style={{ textAlign: "center", padding: 48, color: "#bbb" }}><p style={{ fontSize: 15, color: "#999" }}>No tasks yet</p></div> : visibleTasks.map(t => (
+                <TaskCard key={t.id} task={t} users={USERS} onClaim={handleClaim} onComplete={handleComplete} onReview={handleReview} onProfile={u => setShowProfile(u)} onMessage={openMessage} />
+              ))}
+            </div>
+          )}
+
+          {tab === "messages" && !activeChat && <ConversationList conversations={conversations} users={USERS} onOpenChat={openMessage} />}
+          {tab === "profile" && <ProfileTab user={USERS.me} earnings={earnings} count={tasks.filter(t => t.postedBy === "me" || t.claimedBy === "me").length} />}
+
+          {/* BOTTOM NAV */}
+          <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: "white", borderTop: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-around", padding: "6px 0 12px", zIndex: 90 }}>
+            <button onClick={() => { setTab("home"); setFilter(null); setActiveChat(null); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "4px 12px" }}>
+              {NavIcons.home(tab === "home" || tab === "browse")}
+            </button>
+            <button onClick={() => { setTab("my"); setFilter(null); setActiveChat(null); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "4px 12px" }}>
+              {NavIcons.search(tab === "my")}
+            </button>
+            <button onClick={() => setShowPost(true)} style={{ width: 42, height: 42, borderRadius: "50%", background: "#1f2937", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", marginTop: -10, boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+              {NavIcons.plus()}
+            </button>
+            <button onClick={() => { setTab("messages"); setActiveChat(null); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "4px 12px", position: "relative" }}>
+              {NavIcons.chat(tab === "messages")}
+              {totalUnread > 0 && <div style={{ position: "absolute", top: 0, right: 6, width: 14, height: 14, borderRadius: "50%", background: BLUE, color: "white", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{totalUnread}</div>}
+            </button>
+            <button onClick={() => { setTab("profile"); setFilter(null); setActiveChat(null); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "4px 12px" }}>
+              {NavIcons.user(tab === "profile")}
+            </button>
+          </div>
+
+          {showPost && <PostTaskForm onPost={handlePost} onCancel={() => setShowPost(false)} />}
+          {showProfile && <ProfileCard user={showProfile} onClose={() => setShowProfile(null)} onMessage={openMessage} />}
+          {reviewingTask && <ReviewModal task={reviewingTask} users={USERS} onSubmit={submitReview} onCancel={() => setReviewingTask(null)} />}
+        </div>
+      );
+    }
+
+    // Render the app
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(CampusTask));
+  </script>
+</body>
+</html>
